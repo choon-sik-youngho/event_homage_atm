@@ -44,10 +44,17 @@
     .title { font-size:2.6rem; font-weight:900; color:#2f77d6; margin-top:8px; }
     .subtitle { font-size:1.05rem; color:#2f4f6f; margin-top:8px; }
 
+    /* 첫 화면 텍스트 */
+    .start-text {
+      font-size:1.6rem;
+      font-weight:700;
+      color:#234067;
+    }
+
     /* 스플래시 이미지 */
     .splash-image {
       width:260px; height:260px; border-radius:50%;
-      background-image: url("splash.png"); /* index.html과 같은 폴더에 splash.png 두면 됨 */
+      background-image: url("splash.png"); /* 같은 폴더에 splash.png 두기 */
       background-size: cover; background-position: center;
       box-shadow: 0 10px 24px rgba(45,100,190,0.12); display:block; margin-bottom:18px;
       transform-origin:center; animation: pulse 2.6s ease-in-out infinite;
@@ -150,16 +157,18 @@
 </head>
 <body>
   <div id="app">
-    <!-- Splash -->
-    <div id="screen-splash" class="screen active">
-      <div class="splash-image" role="img" aria-label="막둥이 이미지"></div>
-      <div class="title">막둥이ATM</div>
-      <div class="subtitle" style="margin-top:14px; font-size:1.15rem; font-weight:600; color:#345b88;">
-        터치해서 시작하세요
-      </div>
+    <!-- 1. 첫 화면: 텍스트만 -->
+    <div id="screen-start" class="screen active">
+      <div class="start-text">화면을 터치해주세요</div>
     </div>
 
-    <!-- Password -->
+    <!-- 2. 스플래시: 이미지 + 막둥이ATM -->
+    <div id="screen-splash" class="screen">
+      <div class="splash-image" role="img" aria-label="막둥이 이미지"></div>
+      <div class="title">막둥이ATM</div>
+    </div>
+
+    <!-- 3. 비밀번호 -->
     <div id="screen-password" class="screen">
       <div class="title">막둥이ATM</div>
       <div class="subtitle">비밀번호를 입력하세요</div>
@@ -182,7 +191,7 @@
       </div>
     </div>
 
-    <!-- Amount -->
+    <!-- 4. 금액 선택 -->
     <div id="screen-amount" class="screen">
       <div class="title">막둥이ATM</div>
       <div class="subtitle">원하시는 금액을 선택하세요</div>
@@ -200,7 +209,7 @@
       </div>
     </div>
 
-    <!-- Card -->
+    <!-- 5. 카드 화면 -->
     <div id="screen-card" class="screen">
       <div class="title">막둥이ATM</div>
       <div class="card-insert-container">
@@ -217,7 +226,7 @@
     </div>
   </div>
 
-  <!-- Modal -->
+  <!-- 모달 -->
   <div id="modal-overlay" class="modal-overlay hidden" style="display:none;">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-text">
       <div id="modal-text" class="modal-text">메시지 내용</div>
@@ -230,6 +239,7 @@
   <script>
     /* 요소 */
     const screens = {
+      start: document.getElementById("screen-start"),
       splash: document.getElementById("screen-splash"),
       password: document.getElementById("screen-password"),
       amount: document.getElementById("screen-amount"),
@@ -269,16 +279,13 @@
 
     /* 화면 전환 */
     function setActiveScreen(name) {
-      // 카드 애니메이션 초기화
       atmCard.classList.remove("inserted","removed");
       cardSlot.classList.remove("glow");
       if (cardTimer) { clearTimeout(cardTimer); cardTimer = null; }
 
-      // 화면 전환
       Object.values(screens).forEach(s => s.classList.remove("active"));
       if (screens[name]) screens[name].classList.add("active");
 
-      // 자동 음성: splash / password 는 자동 TTS X
       if (name === "amount") {
         speak("원하시는 금액을 선택해 주세요.");
       }
@@ -300,9 +307,15 @@
       }
     }
 
-    /* 스플래시 클릭: 첫 사용자 제스처에서 인사 + 비번 안내 */
+    /* 1단계: 첫 화면 터치 → "막둥이 에이티엠입니다." + 스플래시로 */
+    screens.start.addEventListener("click", () => {
+      speak("막둥이 에이티엠입니다.");
+      setActiveScreen("splash");
+    });
+
+    /* 2단계: 스플래시 터치 → "비밀번호를 입력해 주세요." + 비밀번호 화면 */
     screens.splash.addEventListener("click", () => {
-      speak("막둥이 에이티엠입니다. 비밀번호를 입력해 주세요.");
+      speak("비밀번호를 입력해 주세요.");
       setActiveScreen("password");
     });
 
@@ -379,8 +392,8 @@
       if (e.target === modalOverlay) hideModal();
     });
 
-    /* 초기: 스플래시만 표시 (무음) */
-    setActiveScreen("splash");
+    /* 초기: 첫 화면 */
+    setActiveScreen("start");
   </script>
 </body>
 </html>

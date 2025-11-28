@@ -44,10 +44,10 @@
     .title { font-size:2.6rem; font-weight:900; color:#2f77d6; margin-top:8px; }
     .subtitle { font-size:1.05rem; color:#2f4f6f; margin-top:8px; }
 
-    /* 스플래시 이미지 (여기 파일명만 바꿔서 사용) */
+    /* 스플래시 이미지 */
     .splash-image {
       width:260px; height:260px; border-radius:50%;
-      background-image: url("splash.png"); /* ← 여기에 이미지 파일명 넣기 (index.html과 같은 폴더) */
+      background-image: url("splash.png"); /* ← 이미지 파일명을 index.html과 같은 폴더에 둔 파일명으로 */
       background-size: cover; background-position: center;
       box-shadow: 0 10px 24px rgba(45,100,190,0.12); display:block; margin-bottom:18px;
       transform-origin:center; animation: pulse 2.6s ease-in-out infinite;
@@ -59,7 +59,7 @@
     }
 
     /* 키패드 */
-    .keypad { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; width:100%; max-width:360px; margin-top:18px; }
+    .keypad { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; width:100%; max-width:360px; margin-top:20px; }
     .key {
       background:#e9f6ff; color:#15406c; border-radius:16px; border:none;
       padding:16px 0; font-weight:700; font-size:1.25rem; cursor:pointer;
@@ -117,10 +117,9 @@
     }
     .modal-text { font-size:1rem; color:#213854; }
 
-    /* 모달 버튼 (수정된 부분) */
     .modal-actions { width:100%; display:flex; gap:10px; justify-content:center; }
     .modal .btn {
-      width:100%; /* 버튼을 가득 채움 */
+      width:100%;
       padding:14px 12px;
       font-size:1.05rem;
       border-radius:12px;
@@ -148,6 +147,12 @@
       .amount-grid { max-width:580px; gap:18px; }
     }
 
+    /* 스플래시용 안내 문구 약간 강조 */
+    .splash-sub {
+      margin-top:4px;
+      font-size:0.95rem;
+      color:#5b7694;
+    }
   </style>
 </head>
 <body>
@@ -156,7 +161,8 @@
     <div id="screen-splash" class="screen active">
       <div class="splash-image" role="img" aria-label="막둥이 이미지"></div>
       <div class="title">막둥이ATM</div>
-      <div class="subtitle">터치해서 시작하세요</div>
+      <div class="subtitle">화면을 터치하세요</div>
+      <div class="splash-sub">(터치 후 음성 안내가 시작됩니다)</div>
     </div>
 
     <!-- Password -->
@@ -166,7 +172,7 @@
       <div id="password-display" class="password-display"></div>
       <div id="password-error" style="color:#d04a4a; min-height:1.2rem;"></div>
 
-      <div class="keypad" style="margin-top:20px;">
+      <div class="keypad">
         <button class="key" data-key="1">1</button>
         <button class="key" data-key="2">2</button>
         <button class="key" data-key="3">3</button>
@@ -276,9 +282,10 @@
       Object.values(screens).forEach(s => s.classList.remove("active"));
       if (screens[name]) screens[name].classList.add("active");
 
-      if (name === "splash") speak("막둥이 에이티엠입니다. 화면을 터치해서 시작해 주세요.");
-      if (name === "password") speak("비밀번호를 입력해 주세요.");
-      if (name === "amount") speak("원하시는 금액을 선택해 주세요.");
+      // splash / password 에서는 자동 TTS 사용 안 함
+      if (name === "amount") {
+        speak("원하시는 금액을 선택해 주세요.");
+      }
       if (name === "card") {
         speak("아래 화살표 방향으로 카드를 넣어 주세요.");
         setTimeout(() => {
@@ -297,30 +304,51 @@
       }
     }
 
-    screens.splash.addEventListener("click", () => setActiveScreen("password"));
+    /* 스플래시 클릭: 첫 사용자 제스처에서 인사 + 비번 안내 */
+    screens.splash.addEventListener("click", () => {
+      speak("막둥이 에이티엠입니다. 비밀번호를 입력해 주세요.");
+      setActiveScreen("password");
+    });
 
     /* 비밀번호 */
     const passwordDisplay = document.getElementById("password-display");
     const passwordError = document.getElementById("password-error");
 
-    function renderPassword() { passwordDisplay.textContent = "•".repeat(currentPassword.length); }
+    function renderPassword() {
+      passwordDisplay.textContent = "•".repeat(currentPassword.length);
+    }
 
     function resetPassword(msg = "") {
-      currentPassword = ""; renderPassword(); passwordError.textContent = msg; if (msg) speak(msg);
+      currentPassword = "";
+      renderPassword();
+      passwordError.textContent = msg;
+      if (msg) speak(msg);
     }
 
     function checkPasswordComplete() {
-      if (currentPassword === CORRECT_PASSWORD) { setActiveScreen("amount"); resetPassword(""); }
-      else { resetPassword("틀렸습니다. 다시 입력해 주세요."); }
+      if (currentPassword === CORRECT_PASSWORD) {
+        setActiveScreen("amount");
+        resetPassword("");
+      } else {
+        resetPassword("틀렸습니다. 다시 입력해 주세요.");
+      }
     }
 
     document.querySelectorAll(".key").forEach(k => {
       k.addEventListener("click", () => {
         const key = k.dataset.key;
-        if (key === "clear") { resetPassword(""); return; }
-        if (key === "back") { currentPassword = currentPassword.slice(0,-1); renderPassword(); return; }
+        if (key === "clear") {
+          resetPassword("");
+          return;
+        }
+        if (key === "back") {
+          currentPassword = currentPassword.slice(0,-1);
+          renderPassword();
+          return;
+        }
         if (currentPassword.length >= 4) return;
-        currentPassword += key; renderPassword();
+        currentPassword += key;
+        renderPassword();
         if (currentPassword.length === 4) checkPasswordComplete();
       });
     });
@@ -329,9 +357,13 @@
     document.querySelectorAll(".amount-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         const amount = Number(btn.dataset.amount);
-        if (amount === 100000) { setActiveScreen("card"); }
-        else if (amount < 100000) { showModal("더 높은 금액을 선택하세요."); }
-        else { showModal("낮은 금액을 선택하세요."); }
+        if (amount === 100000) {
+          setActiveScreen("card");
+        } else if (amount < 100000) {
+          showModal("더 높은 금액을 선택하세요.");
+        } else {
+          showModal("낮은 금액을 선택하세요.");
+        }
       });
     });
 
@@ -347,9 +379,11 @@
       modalOverlay.classList.add("hidden");
     }
     modalClose.addEventListener("click", hideModal);
-    modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) hideModal(); });
+    modalOverlay.addEventListener("click", (e) => {
+      if (e.target === modalOverlay) hideModal();
+    });
 
-    /* 초기 */
+    /* 초기: 스플래시만 표시 (무음) */
     setActiveScreen("splash");
   </script>
 </body>

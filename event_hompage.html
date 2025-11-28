@@ -47,7 +47,7 @@
     /* 스플래시 이미지 */
     .splash-image {
       width:260px; height:260px; border-radius:50%;
-      background-image: url("splash.png"); /* ← 이미지 파일명을 index.html과 같은 폴더에 둔 파일명으로 */
+      background-image: url("splash.png"); /* index.html과 같은 폴더에 splash.png 두면 됨 */
       background-size: cover; background-position: center;
       box-shadow: 0 10px 24px rgba(45,100,190,0.12); display:block; margin-bottom:18px;
       transform-origin:center; animation: pulse 2.6s ease-in-out infinite;
@@ -146,13 +146,6 @@
       .card { height:56px; left:14%; top:-18px; border-radius:14px; }
       .amount-grid { max-width:580px; gap:18px; }
     }
-
-    /* 스플래시용 안내 문구 약간 강조 */
-    .splash-sub {
-      margin-top:4px;
-      font-size:0.95rem;
-      color:#5b7694;
-    }
   </style>
 </head>
 <body>
@@ -161,8 +154,9 @@
     <div id="screen-splash" class="screen active">
       <div class="splash-image" role="img" aria-label="막둥이 이미지"></div>
       <div class="title">막둥이ATM</div>
-      <div class="subtitle">화면을 터치하세요</div>
-      <div class="splash-sub">(터치 후 음성 안내가 시작됩니다)</div>
+      <div class="subtitle" style="margin-top:14px; font-size:1.15rem; font-weight:600; color:#345b88;">
+        터치해서 시작하세요
+      </div>
     </div>
 
     <!-- Password -->
@@ -275,14 +269,16 @@
 
     /* 화면 전환 */
     function setActiveScreen(name) {
+      // 카드 애니메이션 초기화
       atmCard.classList.remove("inserted","removed");
       cardSlot.classList.remove("glow");
       if (cardTimer) { clearTimeout(cardTimer); cardTimer = null; }
 
+      // 화면 전환
       Object.values(screens).forEach(s => s.classList.remove("active"));
       if (screens[name]) screens[name].classList.add("active");
 
-      // splash / password 에서는 자동 TTS 사용 안 함
+      // 자동 음성: splash / password 는 자동 TTS X
       if (name === "amount") {
         speak("원하시는 금액을 선택해 주세요.");
       }

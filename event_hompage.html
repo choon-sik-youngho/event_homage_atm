@@ -366,9 +366,9 @@
     document.querySelectorAll(".amount-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         const amount = Number(btn.dataset.amount);
-        if (amount === 100000) {
+        if (amount === 200000) {
           setActiveScreen("card");
-        } else if (amount < 100000) {
+        } else if (amount < 200000) {
           showModal("더 높은 금액을 선택하세요.");
         } else {
           showModal("낮은 금액을 선택하세요.");
